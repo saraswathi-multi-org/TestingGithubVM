@@ -1,5 +1,5 @@
 {
-  "enforceSecurity" : false,
+  "enforceSecurity" : true,
   "loginConfig" : {
     "type" : "PAGE",
     "pageName" : "Login",
@@ -22,5 +22,19 @@
     "enforceCsrfSecurity" : true,
     "headerName" : "X-WM-XSRF-TOKEN"
   },
-  "authProviders" : { }
+  "authProviders" : {
+    "DEMO" : {
+      "enabled" : true,
+      "users" : [ {
+        "userid" : "user",
+        "password" : "user",
+        "roles" : [ "user" ]
+      }, {
+        "userid" : "admin",
+        "password" : "admin",
+        "roles" : [ "admin" ]
+      } ],
+      "type" : "DEMO"
+    }
+  }
 }
