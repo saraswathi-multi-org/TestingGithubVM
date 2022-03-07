@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<beans xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd" xmlns="http://www.springframework.org/schema/beans" xmlns:security="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:security="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
     <bean class="com.wavemaker.runtime.security.SecurityService" id="securityService"/>
     <bean class="com.wavemaker.runtime.security.controller.SecurityController" id="securityController"/>
     <bean class="com.wavemaker.runtime.web.filter.SSLSecureFilter" id="sslSecureFilter"/>
@@ -8,9 +8,9 @@
         <property name="frameOptions" ref="frameOptions"/>
     </bean>
     <bean class="com.wavemaker.commons.model.security.FrameOptions" id="frameOptions">
-        <property name="enabled" value="${general.frameOptions.enabled}"/>
-        <property name="mode" value="${general.frameOptions.mode}"/>
-        <property name="allowFromUrl" value="${general.frameOptions.allowFromUrl}"/>
+        <property name="enabled" value="${security.general.frameOptions.enabled}"/>
+        <property name="mode" value="${security.general.frameOptions.mode}"/>
+        <property name="allowFromUrl" value="${security.general.frameOptions.allowFromUrl}"/>
     </bean>
     <bean class="com.wavemaker.runtime.security.filter.WMXContentTypeOptionsFilter" id="wmXContentTypeOptionsFilter"/>
     <bean class="org.springframework.web.filter.CorsFilter" id="corsFilter">
@@ -20,26 +20,14 @@
     <bean class="com.wavemaker.runtime.cors.CorsBeanPostProcessor" id="corsBeanPostProcessor"/>
     <bean class="org.springframework.security.web.FilterChainProxy" id="wmCompositeSecurityFilter">
         <constructor-arg>
-            <security:filter-chain pattern="/**" filters="sslSecureFilter, wmXSSFilter, wmFrameOptionsFilter, wmXContentTypeOptionsFilter,corsFilter"/>
+            <security:filter-chain filters="sslSecureFilter, wmXSSFilter, wmFrameOptionsFilter, wmXContentTypeOptionsFilter,corsFilter" pattern="/**"/>
         </constructor-arg>
-    </bean>
-    <bean class="com.wavemaker.runtime.data.spring.WMPropertyPlaceholderConfigurer">
-        <property name="locations">
-            <list>
-                <value>
-                    classpath:securityService.properties
-                </value>
-            </list>
-        </property>
-        <property name="ignoreUnresolvablePlaceholders" value="true"/>
-        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
-        <property name="searchSystemEnvironment" value="true"/>
     </bean>
     <bean class="com.wavemaker.runtime.security.config.WMAppSecurityConfig" id="WMAppSecurityConfig">
         <property name="sslConfig" ref="sslConfig"/>
         <property name="xssConfig" ref="xssConfig"/>
         <property name="enforceSecurity">
-            <value>${enabled}</value>
+            <value>${security.enabled}</value>
         </property>
         <property name="rolesConfig" ref="rolesConfig"/>
         <property name="loginConfig" ref="loginConfig"/>
@@ -48,30 +36,31 @@
         <property name="csrfConfig" ref="csrfConfig"/>
     </bean>
     <bean class="com.wavemaker.commons.model.security.SSLConfig" id="sslConfig">
-        <property name="useSSL" value="${general.ssl.enabled}"/>
-        <property name="sslPort" value="${general.ssl.port}"/>
+        <property name="useSSL" value="${security.general.ssl.enabled}"/>
+        <property name="sslPort" value="${security.general.ssl.port}"/>
         <property name="excludedUrls" value="#{null}"/>
     </bean>
     <bean class="com.wavemaker.commons.model.security.XSSConfig" id="xssConfig">
-        <property name="enforceXssSecurity" value="${general.xss.enabled}"/>
+        <property name="enforceXssSecurity" value="${security.general.xss.enabled}"/>
         <property name="policyFile" value="wm-xss-policies.xml"/>
         <property name="xssFilterStrategy" value="ENCODE"/>
+        <property name="dataBackwardCompatibility" value="${security.general.xss.dataBackwardCompatibility}"/>
     </bean>
     <bean class="com.wavemaker.commons.model.security.CorsConfig" id="corsConfig">
-        <property name="enabled" value="${general.cors.enabled}"/>
-        <property name="maxAge" value="${general.cors.maxAge}"/>
-        <property name="allowCredentials" value="${general.cors.allowCredentials}"/>
+        <property name="enabled" value="${security.general.cors.enabled}"/>
+        <property name="maxAge" value="${security.general.cors.maxAge}"/>
+        <property name="allowCredentials" value="${security.general.cors.allowCredentials}"/>
         <property name="pathEntries">
             <list>
                 <bean class="com.wavemaker.commons.model.security.PathEntry" id="root">
                     <property name="name" value="root"/>
                     <property name="path" value="/**"/>
-                    <property name="allowedOrigins" value="${general.cors.root.allowedOrigins}"/>
+                    <property name="allowedOrigins" value="${security.general.cors.root.allowedOrigins}"/>
                 </bean>
             </list>
         </property>
     </bean>
-    <security:global-method-security pre-post-annotations="enabled" authentication-manager-ref="authenticationManager"/>
+    <security:global-method-security authentication-manager-ref="authenticationManager" pre-post-annotations="enabled"/>
     <security:http pattern="/app.css" security="none"/>
     <security:http pattern="/app.js" security="none"/>
     <security:http pattern="/app.variables.json" security="none"/>
@@ -93,18 +82,18 @@
     <security:http pattern="/app/prefabs/**" security="none"/>
     <security:http pattern="/services/application/wmProperties.js" security="none"/>
     <security:http pattern="/services/webprocess/**" security="none"/>
-    <security:http auto-config="false" use-expressions="true" create-session="stateless" security-context-repository-ref="securityContextRepository" entry-point-ref="appAuthenticationEntryPoint" disable-url-rewriting="true" name="interceptUrlsBean" authentication-manager-ref="authenticationManager">
-        <security:intercept-url pattern="/index.html" access="permitAll"/>
-        <security:intercept-url pattern="/j_spring_security_check" access="permitAll"/>
-        <security:intercept-url pattern="/j_spring_security_logout" access="permitAll"/>
-        <security:intercept-url pattern="/pages/Login/**" access="permitAll"/>
-        <security:intercept-url pattern="/services/application/i18n/**" access="permitAll"/>
-        <security:intercept-url pattern="/services/prefabs/**/servicedefs" access="permitAll"/>
-        <security:intercept-url pattern="/services/security/**" access="permitAll"/>
-        <security:intercept-url pattern="/services/servicedefs" access="permitAll"/>
-        <security:intercept-url pattern="/**" access="permitAll" method="OPTIONS"/>
-        <security:intercept-url pattern="/" access="isAuthenticated()"/>
-        <security:intercept-url pattern="/**" access="isAuthenticated()"/>
+    <security:http authentication-manager-ref="authenticationManager" auto-config="false" create-session="never" disable-url-rewriting="true" entry-point-ref="appAuthenticationEntryPoint" name="interceptUrlsBean" security-context-repository-ref="securityContextRepository" use-expressions="true">
+        <security:intercept-url access="permitAll" pattern="/index.html"/>
+        <security:intercept-url access="permitAll" pattern="/j_spring_security_check"/>
+        <security:intercept-url access="permitAll" pattern="/j_spring_security_logout"/>
+        <security:intercept-url access="permitAll" pattern="/pages/Login/**"/>
+        <security:intercept-url access="permitAll" pattern="/services/application/i18n/**"/>
+        <security:intercept-url access="permitAll" pattern="/services/prefabs/**/servicedefs"/>
+        <security:intercept-url access="permitAll" pattern="/services/security/**"/>
+        <security:intercept-url access="permitAll" pattern="/services/servicedefs"/>
+        <security:intercept-url access="permitAll" method="OPTIONS" pattern="/**"/>
+        <security:intercept-url access="isAuthenticated()" pattern="/"/>
+        <security:intercept-url access="isAuthenticated()" pattern="/**"/>
         <security:headers disabled="true"/>
         <security:csrf disabled="true"/>
         <security:request-cache ref="nullRequestCache"/>
@@ -115,6 +104,10 @@
         <security:custom-filter position="BASIC_AUTH_FILTER" ref="WMBasicAuthenticationFilter"/>
         <security:custom-filter position="FORM_LOGIN_FILTER" ref="WMSecAuthFilter"/>
         <security:custom-filter position="REMEMBER_ME_FILTER" ref="rememberMeAuthFilter"/>
+        <security:custom-filter position="FIRST" ref="sessionRepositoryFilter"/>
+        <security:session-management session-fixation-protection="migrateSession">
+            <security:concurrency-control error-if-maximum-exceeded="false" max-sessions="-1" session-registry-ref="sessionRegistry"/>
+        </security:session-management>
     </security:http>
     <bean class="com.wavemaker.runtime.security.csrf.WMCsrfFilter" id="wmcsrfFilter">
         <constructor-arg ref="csrfTokenRepository"/>
@@ -190,17 +183,17 @@
     <bean class="com.wavemaker.runtime.security.handler.WMSecurityContextRepositorySuccessHandler" id="wmSecurityContextRepositorySuccessHandler">
         <constructor-arg ref="securityContextRepository"/>
     </bean>
-    <bean class="com.wavemaker.runtime.security.WMAuthenticationFailureHandler" id="failureHandler"/>
+    <bean class="com.wavemaker.runtime.security.WMApplicationAuthenticationFailureHandler" id="failureHandler"/>
     <bean class="com.wavemaker.commons.model.security.RememberMeConfig" id="rememberMeConfig">
-        <property name="enabled" value="${general.rememberMe.enabled}"/>
-        <property name="tokenValiditySeconds" value="${general.rememberMe.timeOut}"/>
+        <property name="enabled" value="${security.general.rememberMe.enabled}"/>
+        <property name="tokenValiditySeconds" value="${security.general.rememberMe.timeOut}"/>
     </bean>
     <bean class="com.wavemaker.commons.model.security.LoginConfig" id="loginConfig">
         <property name="pageName" value="Login"/>
         <property name="sessionTimeout">
             <bean class="com.wavemaker.commons.model.security.SessionTimeoutConfig">
                 <property name="pageName" value=""/>
-                <property name="timeoutValue" value="${general.session.timeout}"/>
+                <property name="timeoutValue" value="${security.general.session.timeout}"/>
                 <property name="type">
                     <value type="com.wavemaker.commons.model.security.LoginType">DIALOG</value>
                 </property>
@@ -211,7 +204,7 @@
         </property>
     </bean>
     <bean class="com.wavemaker.commons.model.security.CSRFConfig" id="csrfConfig">
-        <property name="enforceCsrfSecurity" value="${general.xsrf.enabled}"/>
+        <property name="enforceCsrfSecurity" value="${security.general.xsrf.enabled}"/>
         <property name="headerName" value="X-WM-XSRF-TOKEN"/>
     </bean>
     <bean class="com.wavemaker.commons.model.security.RolesConfig" id="rolesConfig">
@@ -232,9 +225,9 @@
         </property>
     </bean>
     <bean class="com.wavemaker.commons.model.security.TokenAuthConfig" id="tokenAuthConfig">
-        <property name="enabled" value="${general.tokenService.enabled}"/>
-        <property name="parameter" value="${general.tokenService.parameter}"/>
-        <property name="tokenValiditySeconds" value="${general.tokenService.tokenValiditySeconds}"/>
+        <property name="enabled" value="${security.general.tokenService.enabled}"/>
+        <property name="parameter" value="${security.general.tokenService.parameter}"/>
+        <property name="tokenValiditySeconds" value="${security.general.tokenService.tokenValiditySeconds}"/>
     </bean>
     <bean class="com.wavemaker.runtime.webprocess.filter.LoginProcessFilter" id="loginWebProcessFilter"/>
     <bean class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter" id="WMSecAuthFilter">
@@ -291,7 +284,7 @@
         <constructor-arg value="WM_APP_KEY"/>
         <constructor-arg ref="rememberMeRepository"/>
         <property name="parameter" value="j_rememberme"/>
-        <property name="tokenValiditySeconds" value="${general.rememberMe.timeOut}"/>
+        <property name="tokenValiditySeconds" value="${security.general.rememberMe.timeOut}"/>
         <constructor-arg ref="demoUserDetailsService"/>
     </bean>
     <bean class="com.wavemaker.runtime.security.rememberme.WMRememberMeAuthenticationFilter" id="rememberMeAuthFilter">
@@ -310,5 +303,17 @@
                 <ref bean="wmCsrfTokenRepositorySuccessHandler"/>
             </list>
         </property>
+    </bean>
+    <import resource="${security.session.persistence.type}_session_config.xml"/>
+    <bean class="org.springframework.session.web.http.DefaultCookieSerializer" id="defaultCookieSerializer">
+        <property name="sameSite" value="#{null}"/>
+        <property name="cookieMaxAge" value="#{${security.general.cookie.maxAge} * 60}"/>
+    </bean>
+    <bean class="org.springframework.session.web.http.CookieHttpSessionIdResolver" id="httpSessionIdResolver">
+        <property name="cookieSerializer" ref="defaultCookieSerializer"/>
+    </bean>
+    <bean class="org.springframework.session.web.http.SessionRepositoryFilter" id="sessionRepositoryFilter">
+        <constructor-arg ref="sessionRepository"/>
+        <property name="httpSessionIdResolver" ref="httpSessionIdResolver"/>
     </bean>
 </beans>
